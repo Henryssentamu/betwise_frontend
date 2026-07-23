@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Lock } from "lucide-react";
+import { Check, X, Lock, Plus } from "lucide-react";
 import { apiClient, BetLog, unwrapList } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
+import LogBetForm from "../components/LogBetForm";
 
 function fmtUGX(v: string | number) {
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -121,6 +122,7 @@ function BetLogRow({ log, onResolved }: { log: BetLog; onResolved: (updated: Bet
 export default function BetLogs() {
   const [logs, setLogs] = useState<BetLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLogForm, setShowLogForm] = useState(false);
 
   useEffect(() => {
     apiClient
@@ -134,8 +136,33 @@ export default function BetLogs() {
   return (
     <div className="max-w-3xl mx-auto px-5 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <span className="label-eyebrow">Bet log</span>
-        <h1 className="font-display text-4xl mt-2 mb-8 text-ink-paper">Your bets</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <span className="label-eyebrow">Bet log</span>
+            <h1 className="font-display text-4xl mt-2 text-ink-paper">Your bets</h1>
+          </div>
+          <button
+            onClick={() => setShowLogForm((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink-paper border border-ink-hairline rounded-stub px-3 py-2 transition-colors"
+          >
+            <Plus size={15} />
+            Log a bet
+          </button>
+        </div>
+
+        {showLogForm && (
+          <div className="bg-ink-panel border border-ink-hairline rounded-stub p-5 mb-6">
+            <span className="text-xs text-ink-faint block mb-3">
+              For a bet you picked yourself, not one of our recommendations.
+            </span>
+            <LogBetForm
+              onLogged={(log) => {
+                setLogs((prev) => [log, ...prev]);
+                setShowLogForm(false);
+              }}
+            />
+          </div>
+        )}
 
         {logs.length === 0 ? (
           <p className="text-sm text-ink-muted">You haven't logged any bets yet.</p>

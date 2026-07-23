@@ -3,8 +3,19 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts";
-import { apiClient, MatchDetail as MatchDetailType } from "../lib/api";
+import { apiClient, MatchDetail as MatchDetailType, Recommendation, unwrapList } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
+import LogBetForm from "../components/LogBetForm";
+import RiskBadge from "../components/RiskBadge";
+
+const BET_TYPE_LABEL: Record<string, string> = {
+  home_win: "Home win",
+  away_win: "Away win",
+  draw: "Draw",
+  corners: "Corners",
+  btts: "Both teams to score",
+  over_under: "Over/Under",
+};
 
 const SEVERITY_META: Record<string, { label: string; className: string }> = {
   minor: { label: "Minor knock", className: "text-risk-low border-risk-low/40 bg-risk-low/10" },
@@ -24,16 +35,21 @@ function formatKickoff(iso: string) {
 export default function MatchDetail() {
   const { id } = useParams<{ id: string }>();
   const [match, setMatch] = useState<MatchDetailType | null>(null);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    apiClient
-      .getMatchDetail(Number(id))
-      .then((res) => {
-        if (!cancelled) setMatch(res.data);
+    Promise.all([
+      apiClient.getMatchDetail(Number(id)),
+      apiClient.getRecommendations({ match: id }),
+    ])
+      .then(([matchRes, recRes]) => {
+        if (cancelled) return;
+        setMatch(matchRes.data);
+        setRecommendation(unwrapList(recRes.data)[0] ?? null);
       })
       .catch(() => {
         if (!cancelled) setError("Couldn't load this match.");
@@ -84,6 +100,35 @@ export default function MatchDetail() {
           {match.away_team.name}
         </h1>
         <p className="text-sm text-ink-muted mb-8">{formatKickoff(match.kickoff_at)}</p>
+
+        {/* The pick + log a bet */}
+        {recommendation && (
+          <div className="bg-ink-panel border border-ink-hairline rounded-stub p-5 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+              <span className="label-eyebrow">The pick</span>
+              <RiskBadge tier={recommendation.risk_tier} size="sm" />
+            </div>
+            <p className="text-lg text-ink-paper font-display mb-1">
+              {BET_TYPE_LABEL[recommendation.bet_type] ?? recommendation.bet_type}
+              <span className="text-sm text-ink-faint font-mono ml-3">
+                {recommendation.suggested_odds_min.toFixed(2)}–{recommendation.suggested_odds_max.toFixed(2)}
+              </span>
+            </p>
+            <p className="text-sm text-ink-muted mb-4">{recommendation.reasoning_summary}</p>
+            <div className="border-t border-ink-hairline pt-4">
+              <span className="text-xs text-ink-faint block mb-2">
+                Placed this bet with a bookmaker? Log it to track it against your plan.
+              </span>
+              <LogBetForm
+                recommendationId={recommendation.id}
+                suggestedOdds={{
+                  min: recommendation.suggested_odds_min,
+                  max: recommendation.suggested_odds_max,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Head-to-head */}
         {h2h && (
