@@ -11,6 +11,7 @@ import Partners from "./pages/Partners";
 import Pricing from "./pages/Pricing";
 import ThisWeek from "./pages/ThisWeek";
 import BetLogs from "./pages/BetLogs";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -80,6 +81,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Pricing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

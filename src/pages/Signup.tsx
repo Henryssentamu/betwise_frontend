@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import { COUNTRIES, findCountry } from "../lib/countries";
 
 function isAtLeast18(dob: string) {
   const birth = new Date(dob);
@@ -21,8 +22,12 @@ const schema = z
     username: z.string().min(3, "At least 3 characters"),
     email: z.string().email("Enter a valid email"),
     password: z.string().min(8, "At least 8 characters"),
+    country_iso2: z.string().min(1, "Select your country"),
+    phone_local: z
+      .string()
+      .min(1, "Required")
+      .regex(/^\d{6,12}$/, "Enter a valid phone number (digits only)"),
     date_of_birth: z.string().min(1, "Required"),
-    national_id_number: z.string().min(5, "Enter a valid ID number"),
     default_risk_appetite: z.enum(["low", "medium", "high"]),
   })
   .refine((data) => isAtLeast18(data.date_of_birth), {
@@ -52,16 +57,27 @@ export default function Signup() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { default_risk_appetite: "medium" },
+    defaultValues: { default_risk_appetite: "medium", country_iso2: "UG" },
   });
 
   const selectedRisk = watch("default_risk_appetite");
+  const selectedCountry = findCountry(watch("country_iso2"));
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);
     setSubmitting(true);
     try {
-      await signup(values);
+      const country = findCountry(values.country_iso2);
+      const localDigits = values.phone_local.replace(/^0+/, "");
+      await signup({
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        country: country?.name ?? "",
+        phone_number: "+" + (country?.dialCode ?? "") + localDigits,
+        date_of_birth: values.date_of_birth,
+        default_risk_appetite: values.default_risk_appetite,
+      });
       navigate("/onboarding");
     } catch (err: any) {
       const data = err?.response?.data;
@@ -118,6 +134,42 @@ export default function Signup() {
           </div>
 
           <div>
+            <label className="block text-sm text-ink-muted mb-1.5">Country</label>
+            <select
+              {...register("country_iso2")}
+              className="w-full bg-ink-panel border border-ink-hairline rounded-stub px-4 py-2.5 text-ink-paper focus:border-ticker outline-none transition-colors"
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.iso2} value={c.iso2}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {errors.country_iso2 && (
+              <p className="text-risk-high text-xs mt-1.5">{errors.country_iso2.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm text-ink-muted mb-1.5">Phone number</label>
+            <div className="flex gap-2">
+              <span className="flex items-center px-3 rounded-stub border border-ink-hairline text-ink-muted text-sm font-mono bg-ink-panel">
+                +{selectedCountry?.dialCode ?? "—"}
+              </span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="701234567"
+                {...register("phone_local")}
+                className="flex-1 min-w-0 bg-ink-panel border border-ink-hairline rounded-stub px-4 py-2.5 text-ink-paper focus:border-ticker outline-none transition-colors"
+              />
+            </div>
+            {errors.phone_local && (
+              <p className="text-risk-high text-xs mt-1.5">{errors.phone_local.message}</p>
+            )}
+          </div>
+
+          <div>
             <label className="block text-sm text-ink-muted mb-1.5">Date of birth</label>
             <input
               type="date"
@@ -126,18 +178,6 @@ export default function Signup() {
             />
             {errors.date_of_birth && (
               <p className="text-risk-high text-xs mt-1.5">{errors.date_of_birth.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm text-ink-muted mb-1.5">National ID number</label>
-            <input
-              {...register("national_id_number")}
-              className="w-full bg-ink-panel border border-ink-hairline rounded-stub px-4 py-2.5 text-ink-paper focus:border-ticker outline-none transition-colors"
-              placeholder="For age verification only"
-            />
-            {errors.national_id_number && (
-              <p className="text-risk-high text-xs mt-1.5">{errors.national_id_number.message}</p>
             )}
           </div>
 

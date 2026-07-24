@@ -57,7 +57,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-ink-muted font-mono">{user?.username}</span>
+                <Link
+                  to="/profile"
+                  className="text-sm text-ink-muted hover:text-ticker font-mono transition-colors"
+                >
+                  {user?.username}
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-risk-high transition-colors px-3 py-2"
@@ -97,6 +102,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="md:hidden border-t border-ink-hairline px-5 py-4 flex flex-col gap-3">
             {isAuthenticated ? (
               <>
+                <NavLink
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-sm text-ticker font-mono py-1"
+                >
+                  {user?.username}
+                </NavLink>
                 {NAV_ITEMS.map((item) => (
                   <NavLink
                     key={item.to}
