@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Check, CheckCircle2, Tag } from "lucide-react";
-import { apiClient, SubscriptionPlan, unwrapList } from "../lib/api";
+import { apiClient, Subscription, SubscriptionPlan, unwrapList } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
+import { useAuth } from "../context/AuthContext";
 
 function fmtUGX(v: string | number) {
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -10,7 +12,10 @@ function fmtUGX(v: string | number) {
 }
 
 export default function Pricing() {
+  const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [promoCode, setPromoCode] = useState("");
@@ -26,9 +31,11 @@ export default function Pricing() {
   const [activated, setActivated] = useState(false);
 
   useEffect(() => {
-    apiClient
-      .getSubscriptionPlans()
-      .then((res) => setPlans(unwrapList(res.data)))
+    Promise.all([apiClient.getSubscriptionPlans(), apiClient.getMySubscription()])
+      .then(([plansRes, subRes]) => {
+        setPlans(unwrapList(plansRes.data));
+        setCurrentSubscription(subRes.data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -63,6 +70,7 @@ export default function Pricing() {
         window.location.href = res.data.redirect_url as string;
       } else {
         setActivated(true);
+        refreshProfile();
       }
     } catch (err: any) {
       setCheckoutError(err?.response?.data?.detail || "Checkout failed. Please try again.");
@@ -96,7 +104,14 @@ export default function Pricing() {
                   : "border-ink-hairline hover:border-ink-faint"
               }`}
             >
-              <span className="label-eyebrow">{plan.tier}</span>
+              <div className="flex items-center justify-between">
+                <span className="label-eyebrow">{plan.billing_cycle}</span>
+                {currentSubscription?.plan?.id === plan.id && (
+                  <span className="inline-flex items-center rounded-full border font-mono uppercase tracking-wide text-[9px] px-2 py-0.5 bg-risk-low/15 text-risk-low border-risk-low/40">
+                    Current plan
+                  </span>
+                )}
+              </div>
               <h3 className="font-display text-2xl text-ink-paper mt-1 mb-3">{plan.name}</h3>
               <div className="ledger-value text-2xl text-ticker mb-1">{fmtUGX(plan.price_ugx)}</div>
               <div className="text-xs text-ink-faint mb-4">
@@ -121,13 +136,28 @@ export default function Pricing() {
             <p className="text-sm text-ink-muted">
               Your {selectedPlan.name} subscription is active — no payment was required.
             </p>
+            <button
+              onClick={() => navigate("/profile")}
+              className="mt-5 bg-ticker text-ink-bg font-medium text-sm px-5 py-2.5 rounded-stub hover:bg-ticker-glow transition-colors"
+            >
+              View in profile
+            </button>
           </div>
         )}
 
-        {selectedPlan && !activated && (
+        {selectedPlan && !activated && currentSubscription?.plan?.id === selectedPlan.id && (
+          <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6 max-w-md text-center">
+            <CheckCircle2 size={32} className="text-risk-low mx-auto mb-3" />
+            <h3 className="font-display text-xl text-ink-paper mb-2">This is your current plan</h3>
+            <p className="text-sm text-ink-muted">Pick a different plan above to switch.</p>
+          </div>
+        )}
+
+        {selectedPlan && !activated && currentSubscription?.plan?.id !== selectedPlan.id && (
           <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6 max-w-md">
             <h3 className="font-display text-xl text-ink-paper mb-4">
-              Checkout — {selectedPlan.name}
+              {currentSubscription ? "Switch to " : "Checkout — "}
+              {selectedPlan.name}
             </h3>
 
             <div className="flex gap-2 mb-3">

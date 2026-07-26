@@ -1,8 +1,16 @@
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { BadgeCheck } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BadgeCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import RiskBadge from "../components/RiskBadge";
+import { apiClient, Subscription } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
+import RiskAppetitePicker from "../components/RiskAppetitePicker";
+
+function fmtUGX(v: string | number) {
+  const n = typeof v === "string" ? parseFloat(v) : v;
+  return "UGX " + Math.round(n).toLocaleString();
+}
 
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
@@ -15,7 +23,38 @@ function fmtDate(iso: string | null) {
 }
 
 export default function Profile() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, updateRiskAppetite } = useAuth();
+
+  const [savingRisk, setSavingRisk] = useState(false);
+  const [riskError, setRiskError] = useState<string | null>(null);
+
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  const loadSubscription = useCallback(() => {
+    setLoadingSubscription(true);
+    apiClient
+      .getMySubscription()
+      .then((res) => setSubscription(res.data))
+      .finally(() => setLoadingSubscription(false));
+  }, []);
+
+  useEffect(() => {
+    loadSubscription();
+  }, [loadSubscription]);
+
+  const handleRiskChange = async (tier: "low" | "medium" | "high") => {
+    if (tier === user?.default_risk_appetite) return;
+    setSavingRisk(true);
+    setRiskError(null);
+    try {
+      await updateRiskAppetite(tier);
+    } catch (err: any) {
+      setRiskError(err?.response?.data?.detail || "Couldn't update your risk appetite.");
+    } finally {
+      setSavingRisk(false);
+    }
+  };
 
   if (isLoading) return <LoadingScreen label="Loading your profile" />;
   if (!user) return null;
@@ -62,14 +101,55 @@ export default function Profile() {
           )}
         </div>
 
-        <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6">
+        <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6 mb-6">
           <span className="label-eyebrow">Risk appetite</span>
           <div className="mt-4">
-            <RiskBadge tier={user.default_risk_appetite} />
+            <RiskAppetitePicker
+              value={user.default_risk_appetite}
+              onChange={handleRiskChange}
+              disabled={savingRisk}
+            />
           </div>
+          {riskError && <p className="text-xs text-risk-high mt-2">{riskError}</p>}
           <p className="text-xs text-ink-faint mt-3">
             Your default risk appetite shapes which recommendations and season stakes we suggest.
           </p>
+        </div>
+
+        <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6">
+          <span className="label-eyebrow">Subscription</span>
+          {loadingSubscription ? (
+            <p className="text-xs text-ink-faint mt-3">Loading…</p>
+          ) : subscription ? (
+            <>
+              <div className="mt-4">
+                <div className="font-display text-lg text-ink-paper">{subscription.plan.name}</div>
+                <div className="text-xs text-ink-muted mt-1">
+                  {fmtUGX(subscription.plan.price_ugx)} /{" "}
+                  {subscription.plan.billing_cycle === "monthly" ? "month" : "season"}
+                  {subscription.ends_at ? ` · renews ${fmtDate(subscription.ends_at.slice(0, 10))}` : ""}
+                </div>
+              </div>
+              <Link
+                to="/pricing"
+                className="mt-4 flex items-center justify-center gap-1 text-sm text-ink-muted hover:text-ink-paper border border-ink-hairline rounded-stub py-2.5 transition-colors"
+              >
+                Change plan
+                <ChevronRight size={14} />
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-ink-faint mt-3">You don't have an active subscription yet.</p>
+              <Link
+                to="/pricing"
+                className="mt-4 flex items-center justify-center gap-1 text-sm text-ink-muted hover:text-ink-paper border border-ink-hairline rounded-stub py-2.5 transition-colors"
+              >
+                Choose a plan
+                <ChevronRight size={14} />
+              </Link>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

@@ -76,7 +76,8 @@ export default function Dashboard() {
   const PaceIcon = meta.icon;
 
   const currentWeek = plan.weekly_targets?.find((wt) => {
-    const start = new Date(wt.week_starts_on);
+    const [y, m, d] = wt.week_starts_on.split("-").map(Number);
+    const start = new Date(y, m - 1, d);
     const end = new Date(start);
     end.setDate(end.getDate() + 7);
     const now = new Date();

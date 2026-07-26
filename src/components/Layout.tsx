@@ -2,13 +2,14 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, Users, LogOut, Menu, X, CreditCard, CalendarDays, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import SubscriptionBanner from "./SubscriptionBanner";
 
 const NAV_ITEMS = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/this-week", label: "This week", icon: CalendarDays },
   { to: "/recommendations", label: "Recommendations", icon: TrendingUp },
   { to: "/bet-logs", label: "Bet log", icon: ClipboardList },
-  { to: "/partners", label: "Partners", icon: Users },
+  { to: "/partners", label: "Trusted", icon: Users },
   { to: "/pricing", label: "Plans", icon: CreditCard },
 ];
 
@@ -143,6 +144,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         )}
       </header>
+
+      <SubscriptionBanner />
 
       <main className="flex-1">{children}</main>
 

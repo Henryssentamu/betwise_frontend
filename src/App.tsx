@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+import GlobalLoadingBar from "./components/GlobalLoadingBar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -16,7 +17,9 @@ import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
-    <Layout>
+    <>
+      <GlobalLoadingBar />
+      <Layout>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -94,6 +97,7 @@ export default function App() {
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </Layout>
+      </Layout>
+    </>
   );
 }

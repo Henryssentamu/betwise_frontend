@@ -5,10 +5,12 @@ interface AuthContextValue {
   user: UserProfile | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasActiveSubscription: boolean | null;
   login: (payload: LoginPayload) => Promise<void>;
   signup: (payload: SignupPayload) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  updateRiskAppetite: (tier: "low" | "medium" | "high") => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -16,19 +18,27 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // null = not yet known; false = known and inactive; true = known and active.
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null);
 
   const refreshProfile = useCallback(async () => {
     if (!apiClient.isAuthenticated()) {
       setUser(null);
+      setHasActiveSubscription(null);
       setIsLoading(false);
       return;
     }
     try {
-      const res = await apiClient.getProfile();
-      setUser(res.data);
+      const [profileRes, subRes] = await Promise.all([
+        apiClient.getProfile(),
+        apiClient.getMySubscription(),
+      ]);
+      setUser(profileRes.data);
+      setHasActiveSubscription(subRes.data !== null);
     } catch {
       apiClient.clearTokens();
       setUser(null);
+      setHasActiveSubscription(null);
     } finally {
       setIsLoading(false);
     }
@@ -48,11 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const res = await apiClient.signup(payload);
     apiClient.setTokens(res.data.access, res.data.refresh);
     setUser(res.data.profile);
+    setHasActiveSubscription(false);
   }, []);
 
   const logout = useCallback(() => {
     apiClient.clearTokens();
     setUser(null);
+    setHasActiveSubscription(null);
+  }, []);
+
+  const updateRiskAppetite = useCallback(async (tier: "low" | "medium" | "high") => {
+    const res = await apiClient.updateProfile({ default_risk_appetite: tier });
+    setUser(res.data);
   }, []);
 
   return (
@@ -61,10 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        hasActiveSubscription,
         login,
         signup,
         logout,
         refreshProfile,
+        updateRiskAppetite,
       }}
     >
       {children}

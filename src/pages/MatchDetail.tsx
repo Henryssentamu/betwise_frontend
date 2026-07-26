@@ -74,9 +74,9 @@ export default function MatchDetail() {
   const h2h = match.head_to_head;
   const h2hData = h2h
     ? [
-        { name: match.home_team.short_name, value: h2h.team_a_wins, fill: "#4FD1C5" },
+        { name: match.home_team.short_name, value: h2h.home_wins, fill: "#4FD1C5" },
         { name: "Draws", value: h2h.draws, fill: "#5D6C70" },
-        { name: match.away_team.short_name, value: h2h.team_b_wins, fill: "#D9A441" },
+        { name: match.away_team.short_name, value: h2h.away_wins, fill: "#D9A441" },
       ]
     : [];
 
@@ -165,13 +165,16 @@ export default function MatchDetail() {
             <div key={team.id} className="bg-ink-panel border border-ink-hairline rounded-stub p-5">
               <span className="label-eyebrow">{team.short_name} form score</span>
               <div className="ledger-value text-3xl text-ink-paper mt-2">
-                {team.current_form_score.toFixed(0)}
-                <span className="text-sm text-ink-faint">/100</span>
+                {team.current_form_score > 0 ? "+" : ""}
+                {team.current_form_score.toFixed(1)}
               </div>
+              <div className="text-xs text-ink-faint mt-0.5">scale: -10 to +10</div>
               <div className="w-full h-1.5 bg-ink-hairline rounded-full mt-3 overflow-hidden">
                 <div
                   className="h-full bg-ticker rounded-full"
-                  style={{ width: `${Math.min(100, Math.max(0, team.current_form_score))}%` }}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, ((team.current_form_score + 10) / 20) * 100))}%`,
+                  }}
                 />
               </div>
             </div>
