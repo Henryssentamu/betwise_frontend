@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import GlobalLoadingBar from "./components/GlobalLoadingBar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RequireSubscription from "./components/RequireSubscription";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -27,7 +28,12 @@ export default function App() {
           path="/onboarding"
           element={
             <ProtectedRoute>
-              <Onboarding />
+              <RequireSubscription
+                title="Season planning is a subscriber feature"
+                description="Subscribe to build a season plan, get weekly stakes tailored to your budget, and track your pace all season."
+              >
+                <Onboarding />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />
@@ -35,7 +41,12 @@ export default function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <RequireSubscription
+                title="Season planning is a subscriber feature"
+                description="Subscribe to build a season plan, get weekly stakes tailored to your budget, and track your pace all season."
+              >
+                <Dashboard />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />
@@ -51,7 +62,12 @@ export default function App() {
           path="/this-week"
           element={
             <ProtectedRoute>
-              <ThisWeek />
+              <RequireSubscription
+                title="This Week is a subscriber feature"
+                description="Subscribe to see your weekly stake, odds targets, daily breakdown, and monthly progress."
+              >
+                <ThisWeek />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />
@@ -59,7 +75,12 @@ export default function App() {
           path="/bet-logs"
           element={
             <ProtectedRoute>
-              <BetLogs />
+              <RequireSubscription
+                title="Bet logging is a subscriber feature"
+                description="Subscribe to track your stakes, odds, and results against your season plan."
+              >
+                <BetLogs />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />
@@ -67,7 +88,12 @@ export default function App() {
           path="/matches/:id"
           element={
             <ProtectedRoute>
-              <MatchDetail />
+              <RequireSubscription
+                title="Match analysis is a subscriber feature"
+                description="Subscribe to see our pick, head-to-head record, team form, and squad news for this match."
+              >
+                <MatchDetail />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />
@@ -75,7 +101,12 @@ export default function App() {
           path="/partners"
           element={
             <ProtectedRoute>
-              <Partners />
+              <RequireSubscription
+                title="Partners & tipsters is a subscriber feature"
+                description="Subscribe to see our trusted sportsbook and tipster recommendations."
+              >
+                <Partners />
+              </RequireSubscription>
             </ProtectedRoute>
           }
         />

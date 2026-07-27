@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { BadgeCheck, ChevronRight } from "lucide-react";
+import { BadgeCheck, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiClient, Subscription } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
@@ -23,7 +23,7 @@ function fmtDate(iso: string | null) {
 }
 
 export default function Profile() {
-  const { user, isLoading, updateRiskAppetite } = useAuth();
+  const { user, isLoading, hasActiveSubscription, updateRiskAppetite } = useAuth();
 
   const [savingRisk, setSavingRisk] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
@@ -103,17 +103,29 @@ export default function Profile() {
 
         <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6 mb-6">
           <span className="label-eyebrow">Risk appetite</span>
-          <div className="mt-4">
-            <RiskAppetitePicker
-              value={user.default_risk_appetite}
-              onChange={handleRiskChange}
-              disabled={savingRisk}
-            />
-          </div>
-          {riskError && <p className="text-xs text-risk-high mt-2">{riskError}</p>}
-          <p className="text-xs text-ink-faint mt-3">
-            Your default risk appetite shapes which recommendations and season stakes we suggest.
-          </p>
+          {hasActiveSubscription === false ? (
+            <div className="flex items-center gap-2 mt-4">
+              <Lock size={14} className="text-ink-faint shrink-0" />
+              <p className="text-xs text-ink-muted flex-1">Subscribe to set your risk appetite.</p>
+              <Link to="/pricing" className="text-xs font-semibold text-ticker shrink-0">
+                View plans
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="mt-4">
+                <RiskAppetitePicker
+                  value={user.default_risk_appetite}
+                  onChange={handleRiskChange}
+                  disabled={savingRisk}
+                />
+              </div>
+              {riskError && <p className="text-xs text-risk-high mt-2">{riskError}</p>}
+              <p className="text-xs text-ink-faint mt-3">
+                Your default risk appetite shapes which recommendations and season stakes we suggest.
+              </p>
+            </>
+          )}
         </div>
 
         <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6">

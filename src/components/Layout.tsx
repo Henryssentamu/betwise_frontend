@@ -1,8 +1,15 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, Users, LogOut, Menu, X, CreditCard, CalendarDays, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import SubscriptionBanner from "./SubscriptionBanner";
+
+// Auth pages get a clean slate — no app chrome. Otherwise a stale session
+// landing on /login (e.g. a direct URL visit while still logged in) shows
+// the full authenticated nav bar behind the login form, which both leaks
+// "you're still signed in" state onto a page that shouldn't have it and
+// reads as broken UX either way.
+const HIDDEN_ON = ["/login", "/signup"];
 
 const NAV_ITEMS = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
@@ -16,7 +23,9 @@ const NAV_ITEMS = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hideChrome = HIDDEN_ON.includes(location.pathname);
 
   const handleLogout = () => {
     logout();
@@ -25,6 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {!hideChrome && (
       <header className="border-b border-ink-hairline bg-ink-bg/95 backdrop-blur sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
@@ -144,8 +154,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         )}
       </header>
+      )}
 
-      <SubscriptionBanner />
+      {!hideChrome && <SubscriptionBanner />}
 
       <main className="flex-1">{children}</main>
 
