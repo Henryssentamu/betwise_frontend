@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import GlobalLoadingBar from "./components/GlobalLoadingBar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RequireSubscription from "./components/RequireSubscription";
+import RequireStaff from "./components/RequireStaff";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
@@ -14,6 +15,9 @@ import Pricing from "./pages/Pricing";
 import ThisWeek from "./pages/ThisWeek";
 import BetLogs from "./pages/BetLogs";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminDataSources from "./pages/AdminDataSources";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -123,6 +127,36 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <RequireStaff>
+                <AdminDashboard />
+              </RequireStaff>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute>
+              <RequireStaff>
+                <AdminUsers />
+              </RequireStaff>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/data-sources"
+          element={
+            <ProtectedRoute>
+              <RequireStaff>
+                <AdminDataSources />
+              </RequireStaff>
             </ProtectedRoute>
           }
         />

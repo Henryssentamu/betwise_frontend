@@ -1,5 +1,5 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, Users, LogOut, Menu, X, CreditCard, CalendarDays, ClipboardList } from "lucide-react";
+import { LayoutDashboard, TrendingUp, Users, LogOut, Menu, X, CreditCard, CalendarDays, ClipboardList, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import SubscriptionBanner from "./SubscriptionBanner";
@@ -20,12 +20,15 @@ const NAV_ITEMS = [
   { to: "/pricing", label: "Plans", icon: CreditCard },
 ];
 
+const ADMIN_NAV_ITEM = { to: "/admin", label: "Admin", icon: Shield };
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const hideChrome = HIDDEN_ON.includes(location.pathname);
+  const navItems = user?.is_staff ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   const handleLogout = () => {
     logout();
@@ -45,7 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {isAuthenticated && (
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -120,7 +123,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 >
                   {user?.username}
                 </NavLink>
-                {NAV_ITEMS.map((item) => (
+                {navItems.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}

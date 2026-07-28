@@ -21,6 +21,7 @@ export interface UserProfile {
   id: string;
   username: string;
   email: string;
+  is_staff: boolean;
   phone_number: string;
   country: string;
   date_of_birth: string | null;
@@ -205,6 +206,41 @@ export interface Tipster {
   handle_or_website: string;
   highlight_note: string;
   rank_order: number;
+}
+
+export interface AdminDashboardStats {
+  active_users: number;
+  mrr_ugx: number;
+  recommendation_accuracy_pct: number | null;
+  users_on_pace_pct: number | null;
+}
+
+export interface AdminGrowthWeek {
+  week_start: string;
+  week_end: string;
+  new_signups: number;
+  paying_subscribers: number;
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  age: number | null;
+  plan_name: string | null;
+  billing_cycle: "monthly" | "seasonal" | null;
+  season_pace_pct: number | null;
+  status: "active" | "pending" | "inactive";
+  created_at: string;
+}
+
+export interface DataSourceStatus {
+  id: number;
+  name: string;
+  source: string;
+  last_synced_at: string | null;
+  status: "synced" | "rate_limited" | "error";
+  detail: string;
 }
 
 // Tracks in-flight requests so a global loading indicator can activate on
@@ -396,6 +432,33 @@ class APIClient {
 
   reportBetResult(id: number, payload: { result: "won" | "lost"; payout_ugx?: number }) {
     return this.client.patch<BetLog>("/bet-logs/" + id + "/", payload);
+  }
+
+  getAdminDashboardStats() {
+    return this.client.get<AdminDashboardStats>("/admin/dashboard-stats/");
+  }
+
+  getAdminGrowth() {
+    return this.client.get<{ weeks: AdminGrowthWeek[] }>("/admin/growth/");
+  }
+
+  getAdminRecentRecommendations() {
+    return this.client.get<Recommendation[]>("/admin/recent-recommendations/");
+  }
+
+  getAdminUsers(params?: { search?: string; billing_cycle?: string; status?: string; page?: number }) {
+    return this.client.get<{ count: number; next: string | null; previous: string | null; results: AdminUser[] }>(
+      "/admin/users/",
+      { params }
+    );
+  }
+
+  getAdminDataSources() {
+    return this.client.get<DataSourceStatus[]>("/matches/admin/data-sources/");
+  }
+
+  resyncDataSource(id: number) {
+    return this.client.post<{ detail: string }>("/matches/admin/data-sources/" + id + "/resync/");
   }
 }
 
