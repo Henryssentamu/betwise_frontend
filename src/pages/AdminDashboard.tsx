@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Users, Database } from "lucide-react";
+import { Users, Database, Wallet, Bell } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { apiClient, AdminDashboardStats, AdminGrowthWeek, Recommendation } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
@@ -136,20 +136,34 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Link
+            to="/admin/revenue"
+            className="inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
+          >
+            <Wallet size={16} />
+            Revenue
+          </Link>
           <Link
             to="/admin/users"
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
           >
             <Users size={16} />
             Manage users
           </Link>
           <Link
             to="/admin/data-sources"
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
           >
             <Database size={16} />
             Data sources
+          </Link>
+          <Link
+            to="/admin/notifications"
+            className="inline-flex items-center justify-center gap-2 bg-ink-panel border border-ink-hairline rounded-stub py-3 text-sm text-ink-paper hover:border-ticker/50 transition-colors"
+          >
+            <Bell size={16} />
+            Notifications
           </Link>
         </div>
       </motion.div>

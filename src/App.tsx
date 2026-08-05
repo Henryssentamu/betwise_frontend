@@ -15,9 +15,12 @@ import Pricing from "./pages/Pricing";
 import ThisWeek from "./pages/ThisWeek";
 import BetLogs from "./pages/BetLogs";
 import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminDataSources from "./pages/AdminDataSources";
+import AdminRevenue from "./pages/AdminRevenue";
+import AdminNotifications from "./pages/AdminNotifications";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -131,6 +134,14 @@ export default function App() {
           }
         />
         <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <ProtectedRoute>
@@ -156,6 +167,26 @@ export default function App() {
             <ProtectedRoute>
               <RequireStaff>
                 <AdminDataSources />
+              </RequireStaff>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/revenue"
+          element={
+            <ProtectedRoute>
+              <RequireStaff>
+                <AdminRevenue />
+              </RequireStaff>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute>
+              <RequireStaff>
+                <AdminNotifications />
               </RequireStaff>
             </ProtectedRoute>
           }

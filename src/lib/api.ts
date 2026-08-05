@@ -243,6 +243,62 @@ export interface DataSourceStatus {
   detail: string;
 }
 
+export type RevenueGranularity = "day" | "week" | "month" | "year";
+
+export interface RevenueByPlan {
+  plan_id: number;
+  plan_name: string;
+  billing_cycle: "monthly" | "seasonal";
+  total_ugx: string;
+  count: number;
+}
+
+export interface RevenueTrendBucket {
+  bucket_start: string;
+  bucket_end: string;
+  total_ugx: string;
+}
+
+export interface AdminRevenue {
+  granularity: RevenueGranularity;
+  period_start: string;
+  period_end: string;
+  prev_anchor: string;
+  next_anchor: string;
+  total_ugx: string;
+  transaction_count: number;
+  by_plan: RevenueByPlan[];
+  trend: RevenueTrendBucket[];
+}
+
+export type NotificationType = "subscription_expiring_monthly" | "subscription_expiring_seasonal";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface AdminNotificationLogEntry {
+  id: number;
+  username: string;
+  email: string;
+  plan_name: string;
+  notification_type: NotificationType;
+  status: "sent" | "failed";
+  detail: string;
+  subscription_ends_at: string | null;
+  created_at: string;
+}
+
+export interface AdminNotificationSummary {
+  [key: string]: { sent: number; failed: number };
+}
+
 // Tracks in-flight requests so a global loading indicator can activate on
 // any click that triggers a network call, and deactivate once it settles.
 type LoadingListener = (isLoading: boolean) => void;
@@ -463,6 +519,33 @@ class APIClient {
 
   resyncDataSource(id: number) {
     return this.client.post<{ detail: string }>("/matches/admin/data-sources/" + id + "/resync/");
+  }
+
+  getAdminRevenue(granularity: RevenueGranularity, anchor?: string) {
+    return this.client.get<AdminRevenue>("/admin/revenue/", { params: { granularity, anchor } });
+  }
+
+  getNotifications() {
+    return this.client.get<{ results: Notification[] } | Notification[]>("/auth/notifications/");
+  }
+
+  getUnreadNotificationCount() {
+    return this.client.get<{ count: number }>("/auth/notifications/unread-count/");
+  }
+
+  markNotificationRead(id: string) {
+    return this.client.post<Notification>("/auth/notifications/" + id + "/read/");
+  }
+
+  markAllNotificationsRead() {
+    return this.client.post<{ detail: string }>("/auth/notifications/mark-all-read/");
+  }
+
+  getAdminNotificationLog(params?: { type?: string; status?: string; search?: string; page?: number }) {
+    return this.client.get<{
+      count: number; next: string | null; previous: string | null;
+      summary: AdminNotificationSummary; results: AdminNotificationLogEntry[];
+    }>("/admin/notifications/", { params });
   }
 }
 

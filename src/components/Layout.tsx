@@ -3,6 +3,7 @@ import { LayoutDashboard, TrendingUp, Users, LogOut, Menu, X, CreditCard, Calend
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import SubscriptionBanner from "./SubscriptionBanner";
+import NotificationBell from "./NotificationBell";
 
 // Auth pages get a clean slate — no app chrome. Otherwise a stale session
 // landing on /login (e.g. a direct URL visit while still logged in) shows
@@ -71,6 +72,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
+                <NotificationBell />
                 <Link
                   to="/profile"
                   className="text-sm text-ink-muted hover:text-ticker font-mono transition-colors"
@@ -122,6 +124,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="text-sm text-ticker font-mono py-1"
                 >
                   {user?.username}
+                </NavLink>
+                <NavLink
+                  to="/notifications"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-sm text-ink-muted hover:text-ink-paper py-1"
+                >
+                  Notifications
                 </NavLink>
                 {navItems.map((item) => (
                   <NavLink
