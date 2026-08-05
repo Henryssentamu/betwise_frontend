@@ -9,6 +9,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   signup: (payload: SignupPayload) => Promise<void>;
   logout: () => void;
+  deleteAccount: (password: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateRiskAppetite: (tier: "low" | "medium" | "high") => Promise<void>;
 }
@@ -67,6 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setHasActiveSubscription(null);
   }, []);
 
+  const deleteAccount = useCallback(async (password: string) => {
+    await apiClient.deleteAccount(password);
+    apiClient.clearTokens();
+    setUser(null);
+    setHasActiveSubscription(null);
+  }, []);
+
   const updateRiskAppetite = useCallback(async (tier: "low" | "medium" | "high") => {
     const res = await apiClient.updateProfile({ default_risk_appetite: tier });
     setUser(res.data);
@@ -82,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        deleteAccount,
         refreshProfile,
         updateRiskAppetite,
       }}

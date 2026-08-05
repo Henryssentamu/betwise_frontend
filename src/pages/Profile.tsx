@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { BadgeCheck, ChevronRight, Lock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BadgeCheck, ChevronRight, Lock, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiClient, Subscription } from "../lib/api";
 import LoadingScreen from "../components/LoadingScreen";
@@ -23,13 +23,19 @@ function fmtDate(iso: string | null) {
 }
 
 export default function Profile() {
-  const { user, isLoading, hasActiveSubscription, updateRiskAppetite } = useAuth();
+  const { user, isLoading, hasActiveSubscription, updateRiskAppetite, deleteAccount } = useAuth();
+  const navigate = useNavigate();
 
   const [savingRisk, setSavingRisk] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadSubscription = useCallback(() => {
     setLoadingSubscription(true);
@@ -53,6 +59,23 @@ export default function Profile() {
       setRiskError(err?.response?.data?.detail || "Couldn't update your risk appetite.");
     } finally {
       setSavingRisk(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError("Enter your password to confirm.");
+      return;
+    }
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount(deletePassword);
+      navigate("/login");
+    } catch (err: any) {
+      setDeleteError(err?.response?.data?.password?.[0] || "Couldn't delete your account.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -161,6 +184,56 @@ export default function Profile() {
                 <ChevronRight size={14} />
               </Link>
             </>
+          )}
+        </div>
+
+        <div className="bg-ink-panel border border-ink-hairline rounded-stub p-6 mt-6">
+          <span className="label-eyebrow">Settings</span>
+
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-risk-high border border-risk-high/30 rounded-stub py-2.5 hover:bg-risk-high/10 transition-colors"
+            >
+              <Trash2 size={15} />
+              Delete account
+            </button>
+          ) : (
+            <div className="mt-4 bg-risk-high/5 border border-risk-high/30 rounded-stub p-4">
+              <p className="text-xs text-ink-muted mb-3">
+                This deactivates your account and cancels any active subscription — you won't be able to log
+                in again. Your data is kept for our records but you'll lose access. This can't be undone from
+                the app.
+              </p>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password to confirm"
+                className="w-full bg-ink-bg border border-ink-hairline rounded-stub px-3 py-2 text-sm text-ink-paper focus:border-risk-high outline-none mb-3"
+              />
+              {deleteError && <p className="text-xs text-risk-high mb-3">{deleteError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeletePassword("");
+                    setDeleteError(null);
+                  }}
+                  disabled={deleting}
+                  className="flex-1 text-sm text-ink-muted border border-ink-hairline rounded-stub py-2.5 hover:text-ink-paper transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="flex-1 text-sm text-ink-bg bg-risk-high rounded-stub py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {deleting ? "Deleting…" : "Delete my account"}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </motion.div>
